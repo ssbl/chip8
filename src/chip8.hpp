@@ -3,6 +3,12 @@
 
 #include <array>
 
+enum Color : unsigned int
+{
+  BLACK = 0xff000000,
+  WHITE = 0xffffffff,
+};
+
 struct Chip8
 {
   unsigned short opcode;
@@ -10,7 +16,7 @@ struct Chip8
   std::array<unsigned char, 16> V;
   unsigned short i;
   unsigned short pc;
-  std::array<unsigned char, 64 * 32> framebuffer;
+  std::array<Color, 64 * 32> framebuffer;
   unsigned char delay_timer;
   unsigned char sound_timer;
   std::array<unsigned char, 16> key;

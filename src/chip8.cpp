@@ -16,6 +16,7 @@ Chip8::Chip8()
 {
   for (auto i = 0; i < 80; ++i)
     memory[i] = fontset[i];
+  clear_display();
 }
 
 bool
@@ -32,6 +33,12 @@ Chip8::load_rom(const char* path)
   rom_file.read(reinterpret_cast<char*>(memory.data() + 0x200), fsize);
 
   return true;
+}
+
+void
+Chip8::clear_display()
+{
+  std::fill_n(framebuffer.begin(), 64 * 32, Color::BLACK);
 }
 
 static void
@@ -84,10 +91,12 @@ Chip8::step()
     case 0x6000: { // ld Vx,byte
       auto x = (opcode & 0x0f00) >> 8;
       V[x] = opcode & 0x00ff;
+      pc += 2;
     } break;
     case 0x7000: { // add Vx,byte
       auto x = (opcode & 0x0f00) >> 8;
       V[x] += opcode & 0x00ff;
+      pc += 2;
     } break;
     case 0x8000: {
       auto x = (opcode & 0x0f00) >> 8;
@@ -155,6 +164,7 @@ Chip8::step()
     case 0xc000: { // rnd Vx,byte
       const auto x = (opcode & 0x0f00) >> 8;
       V[x] = 99 & (opcode & 0x00ff);
+      pc += 2;
     } break;
     case 0xd000: { // drw Vx,Vy,nibble
       // TODO: bounds checking?
@@ -164,13 +174,18 @@ Chip8::step()
 
       V[0xf] = 0;
       for (auto sy = 0; sy < n; ++sy) {
-        const auto index = V[x] * 32 + V[y] + sy;
-        const auto old_pixel = framebuffer[index];
-        framebuffer[index] ^= memory[i + sy];
+	const auto pixel = memory[i + sy];
         for (auto bit = 0; bit < 8; ++bit) {
+	  const auto index = x + bit + (y + sy) * 64;
           // check if any bit in the new pixel has changed from 1 to 0
-          V[0xf] |=
-            ((old_pixel >> bit) & 1) > ((framebuffer[index] >> bit) & 1);
+	  if ((pixel & (0x80 >> bit)) != 0) {
+	    if (framebuffer[index] == Color::WHITE) {
+	      V[0xf] = 1;
+	      framebuffer[index] = Color::BLACK;
+	    } else {
+	      framebuffer[index] = Color::WHITE;
+	    }
+	  }
         }
 
         draw_flag = true;
