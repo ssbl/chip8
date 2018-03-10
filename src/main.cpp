@@ -24,7 +24,7 @@ main(const int argc, const char* argv[])
     goto cleanup;
   }
 
-  window = SDL_CreateWindow("FIRST WINDOW!",
+  window = SDL_CreateWindow("CHIP-8 Emulator",
                             SDL_WINDOWPOS_CENTERED,
                             SDL_WINDOWPOS_CENTERED,
 			    width,
@@ -52,19 +52,6 @@ main(const int argc, const char* argv[])
 
   if (!chip8.load_rom(argv[1]))
     std::printf("error loading file: %s\n", argv[1]);
-
-  // for (auto i = 80; i < 0x200; ++i) {
-  //   if (chip8.memory[i]) {
-  //     std::puts("failed");
-  //     return 1;
-  //   }
-  // }
-  // for (auto i = 0; i < 80; ++i) {
-  //   if (chip8.memory[i] != chip8.fontset[i]) {
-  //     std::puts("fontset mismatch");
-  //     return 1;
-  //   }
-  // }
 
   while (true) {
     chip8.step();
