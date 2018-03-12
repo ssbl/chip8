@@ -128,7 +128,7 @@ Chip8::step()
           V[x] = sum;
         } break;
         case 0x5: { // sub Vx,Vy
-          V[0xf] = V[x] > V[y];
+          V[0xf] = V[x] >= V[y];
           V[x] -= V[y];
         } break;
         case 0x6: { // shr Vx
