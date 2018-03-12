@@ -47,10 +47,23 @@ unknown_instruction(const unsigned short opcode)
   std::cerr << "unknown instruction: " << opcode << '\n';
 }
 
+static unsigned char
+get_x(const unsigned short opcode)
+{
+  return (opcode & 0x0f00) >> 8;
+}
+
+static unsigned char
+get_y(const unsigned short opcode)
+{
+  return (opcode & 0x00f0) >> 4;
+}
+
 void
 Chip8::step()
 {
   opcode = (memory[pc] << 8) | memory[pc + 1];
+  // std::cout << std::hex << opcode << '\n';
   draw_flag = false;
 
   switch (opcode & 0xf000) {
@@ -76,31 +89,25 @@ Chip8::step()
       pc = opcode & 0x0fff;
     } break;
     case 0x3000: { // se Vx,byte
-      auto x = (opcode & 0x0f00) >> 8;
-      pc += (V[x] == (opcode & 0x00ff)) ? 4 : 2;
+      pc += (V[get_x(opcode)] == (opcode & 0x00ff)) ? 4 : 2;
     } break;
     case 0x4000: { // sne Vx,byte
-      auto x = (opcode & 0x0f00) >> 8;
-      pc += (V[x] != (opcode & 0x00ff)) ? 4 : 2;
+      pc += (V[get_x(opcode)] != (opcode & 0x00ff)) ? 4 : 2;
     } break;
     case 0x5000: { // se Vx,vy
-      auto x = (opcode & 0x0f00) >> 8;
-      auto y = (opcode & 0x00f0) >> 4;
-      pc += (V[x] == V[y]) ? 4 : 2;
+      pc += (V[get_x(opcode)] == V[get_y(opcode)]) ? 4 : 2;
     } break;
     case 0x6000: { // ld Vx,byte
-      auto x = (opcode & 0x0f00) >> 8;
-      V[x] = opcode & 0x00ff;
+      V[get_x(opcode)] = opcode & 0x00ff;
       pc += 2;
     } break;
     case 0x7000: { // add Vx,byte
-      auto x = (opcode & 0x0f00) >> 8;
-      V[x] += opcode & 0x00ff;
+      V[get_x(opcode)] += opcode & 0x00ff;
       pc += 2;
     } break;
     case 0x8000: {
-      auto x = (opcode & 0x0f00) >> 8;
-      auto y = (opcode & 0x00f0) >> 4;
+      const auto x = get_x(opcode);
+      const auto y = get_y(opcode);
 
       switch (opcode & 0x000f) {
         case 0x0: { // ld Vx,Vy
@@ -145,9 +152,7 @@ Chip8::step()
     case 0x9000: {
       switch (opcode & 0x000f) {
         case 0x0: { // sne Vx,Vy
-          auto x = (opcode & 0x0f00) >> 8;
-          auto y = (opcode & 0x00f0) >> 4;
-          pc += (V[x] != V[y]) ? 4 : 2;
+          pc += (V[get_x(opcode)] != V[get_y(opcode)]) ? 4 : 2;
         } break;
         default:
           unknown_instruction(opcode);
@@ -168,8 +173,8 @@ Chip8::step()
     } break;
     case 0xd000: { // drw Vx,Vy,nibble
       // TODO: bounds checking?
-      const auto x = (opcode & 0x0f00) >> 8;
-      const auto y = (opcode & 0x00f0) >> 4;
+      const auto x = get_x(opcode);
+      const auto y = get_y(opcode);
       const auto n = opcode & 0x000f;
 
       V[0xf] = 0;
@@ -195,12 +200,11 @@ Chip8::step()
     case 0xe000: {
       switch (opcode & 0x00ff) {
         case 0x9e: { // skp Vx
-          const auto x = (opcode & 0x0f00) >> 8;
-          pc += key[V[x]] ? 4 : 2;
+          assert(V[get_x(opcode)] <= 0x0f);
+          pc += (key[V[get_x(opcode)]] == 1) ? 4 : 2;
         } break;
         case 0xa1: { // sknp Vx
-          const auto x = (opcode & 0x0f00) >> 8;
-          pc += (key[V[x]] == 0) ? 4 : 2;
+          pc += (key[V[get_x(opcode)]] == 0) ? 4 : 2;
         } break;
         default:
           unknown_instruction(opcode);
