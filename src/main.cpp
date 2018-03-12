@@ -93,7 +93,7 @@ cleanup:
           case SDLK_3: // 3
             chip8.key[0x3] = keyval;
             break;
-          case SDLK_4: // A
+          case SDLK_4: // C
             chip8.key[0xc] = keyval;
             break;
           case SDLK_q: // 4
