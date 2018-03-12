@@ -180,10 +180,9 @@ Chip8::step()
         assert(i + sy < static_cast<int>(memory.size()));
         const auto pixel = memory[i + sy];
         for (auto bit = 0; bit < 8; ++bit) {
-          const auto index = V[x] + bit + (V[y] + sy) * 64;
+          const auto index = (V[x] + bit + (V[y] + sy) * 64) % framebuffer.size();
           // check if any bit in the new pixel has changed from 1 to 0
           if ((pixel & (0x80 >> bit)) != 0) {
-            assert(index < static_cast<int>(framebuffer.size()));
             if (framebuffer[index] == Color::WHITE) {
               V[0xf] = 1;
               framebuffer[index] = Color::BLACK;
