@@ -164,38 +164,38 @@ Chip8::step()
       pc += 2;
     } break;
     case 0xb000: { // jp V0,addr
-      pc = (opcode & 0x0fff) + V[0];
+      pc = (opcode & 0x0fff) + V[0x0];
     } break;
     case 0xc000: { // rnd Vx,byte
-      const auto x = (opcode & 0x0f00) >> 8;
-      V[x] = 99 & (opcode & 0x00ff);
+      V[get_x(opcode)] = (std::rand() % 256) & (opcode & 0x00ff);
       pc += 2;
     } break;
     case 0xd000: { // drw Vx,Vy,nibble
-      // TODO: bounds checking?
       const auto x = get_x(opcode);
       const auto y = get_y(opcode);
       const auto n = opcode & 0x000f;
 
       V[0xf] = 0;
       for (auto sy = 0; sy < n; ++sy) {
-	const auto pixel = memory[i + sy];
+        assert(i + sy < static_cast<int>(memory.size()));
+        const auto pixel = memory[i + sy];
         for (auto bit = 0; bit < 8; ++bit) {
-	  const auto index = x + bit + (y + sy) * 64;
+          const auto index = V[x] + bit + (V[y] + sy) * 64;
           // check if any bit in the new pixel has changed from 1 to 0
-	  if ((pixel & (0x80 >> bit)) != 0) {
-	    if (framebuffer[index] == Color::WHITE) {
-	      V[0xf] = 1;
-	      framebuffer[index] = Color::BLACK;
-	    } else {
-	      framebuffer[index] = Color::WHITE;
-	    }
-	  }
+          if ((pixel & (0x80 >> bit)) != 0) {
+            assert(index < static_cast<int>(framebuffer.size()));
+            if (framebuffer[index] == Color::WHITE) {
+              V[0xf] = 1;
+              framebuffer[index] = Color::BLACK;
+            } else {
+              framebuffer[index] = Color::WHITE;
+            }
+          }
         }
-
-        draw_flag = true;
-        pc += 2;
       }
+
+      draw_flag = true;
+      pc += 2;
     } break;
     case 0xe000: {
       switch (opcode & 0x00ff) {
