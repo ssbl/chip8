@@ -2,15 +2,39 @@
 
 #include <algorithm>
 #include <cassert>
+#include <chrono>
 #include <fstream>
 #include <iostream>
+
+TimedRegister::TimedRegister()
+  : value(0)
+{}
+
+void
+TimedRegister::set(const unsigned char new_value)
+{
+  value = new_value;
+  last_write = std::chrono::high_resolution_clock::now();
+}
+
+void
+TimedRegister::decrement()
+{
+  if (value == 0)
+    return;
+
+  const auto now = std::chrono::high_resolution_clock::now();
+  if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_write)
+        .count() >= 1000 / 60) {
+    --value;
+    last_write = now;
+  }
+}
 
 Chip8::Chip8()
   : opcode(0)
   , i(0)
   , pc(0x200)
-  , delay_timer(0)
-  , sound_timer(0)
   , sp(0)
   , draw_flag(false)
 {
@@ -214,7 +238,7 @@ Chip8::step()
       const auto x = (opcode & 0x0f00) >> 8;
       switch (opcode & 0x00ff) {
         case 0x07: { // ld Vx,dt
-          V[x] = delay_timer;
+          V[x] = delay_timer.value;
           pc += 2;
         } break;
         case 0x0a: { // ld Vx,k
@@ -223,11 +247,11 @@ Chip8::step()
           pc += 2;
         } break;
         case 0x15: { // ld dt,Vx
-          delay_timer = V[x];
+          delay_timer.set(V[x]);
           pc += 2;
         } break;
         case 0x18: { // ld st,Vx
-          sound_timer = V[x];
+          sound_timer.set(V[x]);
           pc += 2;
         } break;
         case 0x1e: { // add i,Vx
@@ -268,11 +292,6 @@ Chip8::step()
       return;
   }
 
-  if (delay_timer > 0) {
-    --delay_timer;
-  }
-  if (sound_timer > 0) {
-    // TODO: beep
-    --sound_timer;
-  }
+  delay_timer.decrement();
+  sound_timer.decrement();
 }
