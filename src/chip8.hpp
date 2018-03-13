@@ -4,7 +4,7 @@
 #include <array>
 #include <chrono>
 
-enum Color : unsigned int
+enum class Color : unsigned int
 {
   BLACK = 0xff000000,
   WHITE = 0xffffffff,
@@ -59,8 +59,6 @@ struct Chip8
   bool load_rom(const char* path);
   void step();
   void clear_display();
-  // void update_screen();
-  // void set_keys();
 };
 
 #endif // CHIP8_HPP_INCLUDED
