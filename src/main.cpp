@@ -7,10 +7,17 @@
 int
 main(const int argc, const char* argv[])
 {
-  if (argc != 2)
+  if (argc != 2) {
     std::printf("usage\n");
+    return 1;
+  }
 
   Chip8 chip8;
+
+  if (!chip8.load_rom(argv[1])) {
+    std::printf("error loading file: %s\n", argv[1]);
+    return 1;
+  }
 
   // setup SDL
   const int width = 640;
@@ -25,10 +32,10 @@ main(const int argc, const char* argv[])
   }
 
   window = SDL_CreateWindow("CHIP-8 Emulator",
-                            SDL_WINDOWPOS_CENTERED,
-                            SDL_WINDOWPOS_CENTERED,
-			    width,
-			    height,
+                            SDL_WINDOWPOS_UNDEFINED,
+                            SDL_WINDOWPOS_UNDEFINED,
+                            width,
+                            height,
                             SDL_WINDOW_SHOWN);
   if (!window) {
     std::cerr << "SDL error: " << SDL_GetError() << '\n';
@@ -48,39 +55,13 @@ main(const int argc, const char* argv[])
     goto cleanup;
   }
 
-  // TODO: setup sound
-
-  if (!chip8.load_rom(argv[1]))
-    std::printf("error loading file: %s\n", argv[1]);
-
   while (true) {
     chip8.step();
 
-    // update display
-    if (chip8.draw_flag) {
-      SDL_RenderClear(renderer);
-      // the nullptrs indicate a full update of the texture
-      SDL_UpdateTexture(texture, nullptr, chip8.framebuffer.data(), 4 * 64);
-      SDL_RenderCopy(renderer, texture, nullptr, nullptr);
-      SDL_RenderPresent(renderer);
-    }
-
-    // TODO: set key presses
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_QUIT)
         goto cleanup;
-    }
-
-    SDL_Delay(50);
-  }
-
-cleanup:
-  SDL_DestroyTexture(texture);
-  SDL_DestroyRenderer(renderer);
-  SDL_DestroyWindow(window);
-  SDL_Quit();
-}
       if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
         const auto keyval = event.type == SDL_KEYUP ? 0 : 1;
         switch (event.key.keysym.sym) {
@@ -144,3 +125,14 @@ cleanup:
       SDL_UpdateTexture(texture, nullptr, copy.data(), 64 * sizeof(unsigned));
       SDL_RenderCopy(renderer, texture, nullptr, nullptr);
       SDL_RenderPresent(renderer);
+    }
+
+    SDL_Delay(2);
+  }
+
+cleanup:
+  SDL_DestroyTexture(texture);
+  SDL_DestroyRenderer(renderer);
+  SDL_DestroyWindow(window);
+  SDL_Quit();
+}
