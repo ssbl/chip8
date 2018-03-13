@@ -35,6 +35,7 @@ struct Chip8
   unsigned short sp;
 
   bool draw_flag;
+  bool halted;
 
   static constexpr std::array<unsigned char, 80> fontset = {
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0

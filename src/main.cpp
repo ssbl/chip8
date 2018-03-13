@@ -55,7 +55,7 @@ main(const int argc, const char* argv[])
     goto cleanup;
   }
 
-  while (true) {
+  while (!chip8.halted) {
     chip8.step();
 
     SDL_Event event;

@@ -1,4 +1,5 @@
 #include "chip8.hpp"
+#include "SDL2/SDL.h"
 
 #include <algorithm>
 #include <cassert>
@@ -37,6 +38,7 @@ Chip8::Chip8()
   , pc(0x200)
   , sp(0)
   , draw_flag(false)
+  , halted(false)
 {
   for (auto i = 0; i < 80; ++i)
     memory[i] = fontset[i];
@@ -235,16 +237,76 @@ Chip8::step()
       }
     } break;
     case 0xf000: {
-      const auto x = (opcode & 0x0f00) >> 8;
+      const auto x = get_x(opcode);
       switch (opcode & 0x00ff) {
         case 0x07: { // ld Vx,dt
           V[x] = delay_timer.value;
           pc += 2;
         } break;
         case 0x0a: { // ld Vx,k
-	  // TODO: store the correct key in Vx here
-          std::cin >> V[x];
-          pc += 2;
+          SDL_Event event;
+          while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+              halted = true;
+              return;
+            }
+            if (event.type == SDL_KEYDOWN) {
+              switch (event.key.keysym.sym) {
+                case SDLK_1: // 1
+                  V[x] = 0x1;
+                  break;
+                case SDLK_2: // 2
+                  V[x] = 0x2;
+                  break;
+                case SDLK_3: // 3
+                  V[x] = 0x3;
+                  break;
+                case SDLK_4: // C
+                  V[x] = 0xc;
+                  break;
+                case SDLK_q: // 4
+                  V[x] = 0x4;
+                  break;
+                case SDLK_w: // 5
+                  V[x] = 0x5;
+                  break;
+                case SDLK_e: // 6
+                  V[x] = 0x6;
+                  break;
+                case SDLK_r: // D
+                  V[x] = 0xd;
+                  break;
+                case SDLK_a: // 7
+                  V[x] = 0x7;
+                  break;
+                case SDLK_s: // 8
+                  V[x] = 0x8;
+                  break;
+                case SDLK_d: // 9
+                  V[x] = 0x9;
+                  break;
+                case SDLK_f: // E
+                  V[x] = 0xe;
+                  break;
+                case SDLK_z: // A
+                  V[x] = 0xa;
+                  break;
+                case SDLK_x: // 0
+                  V[x] = 0x0;
+                  break;
+                case SDLK_c: // B
+                  V[x] = 0xb;
+                  break;
+                case SDLK_v: // F
+                  V[x] = 0xf;
+                  break;
+                default:
+                  // Try again
+                  return;
+              }
+              pc += 2;
+            }
+          }
         } break;
         case 0x15: { // ld dt,Vx
           delay_timer.set(V[x]);
