@@ -37,7 +37,7 @@ Chip8::Chip8()
   , i(0)
   , pc(0x200)
   , sp(0)
-  , draw_flag(false)
+  , draw_flag(true)
   , halted(false)
 {
   for (auto i = 0; i < 80; ++i)
@@ -52,19 +52,19 @@ Chip8::load_rom(const char* path)
   if (!rom_file)
     return false;
 
-  auto fsize = static_cast<std::size_t>(rom_file.tellg());
+  std::size_t fsize = rom_file.tellg();
   if (fsize > sizeof memory[0] * (0x1000 - 0x200))
     return false;
+
   rom_file.seekg(0);
   rom_file.read(reinterpret_cast<char*>(memory.data() + 0x200), fsize);
-
   return true;
 }
 
 void
 Chip8::clear_display()
 {
-  std::fill_n(framebuffer.begin(), 64 * 32, Color::BLACK);
+  framebuffer.fill(Color::BLACK);
 }
 
 static void
@@ -89,7 +89,6 @@ void
 Chip8::step()
 {
   opcode = (memory[pc] << 8) | memory[pc + 1];
-  // std::cout << std::hex << opcode << '\n';
   draw_flag = false;
 
   switch (opcode & 0xf000) {
@@ -97,10 +96,13 @@ Chip8::step()
       switch (opcode & 0x00ff) {
         case 0xe0: // cls
           clear_display();
+          draw_flag = true;
           pc += 2;
           break;
         case 0xee: // ret
+          assert(sp > 0);
           pc = stack[--sp];
+          pc += 2;
           break;
         default: // sys addr (0x0nnn)
           pc = opcode & 0x0fff;
@@ -111,6 +113,7 @@ Chip8::step()
       pc = opcode & 0x0fff;
     } break;
     case 0x2000: { // call addr
+      assert(sp <= 0xf);
       stack[sp++] = pc;
       pc = opcode & 0x0fff;
     } break;
@@ -149,20 +152,20 @@ Chip8::step()
           V[x] ^= V[y];
         } break;
         case 0x4: { // add Vx,Vy
-          auto sum = V[x] + V[y];
+          const auto sum = V[x] + V[y];
           V[0xf] = sum > 0xff;
           V[x] = sum;
         } break;
         case 0x5: { // sub Vx,Vy
-          V[0xf] = V[x] >= V[y];
+          V[0xf] = !(V[y] > V[x]);
           V[x] -= V[y];
         } break;
         case 0x6: { // shr Vx
           V[0xf] = V[x] & 1;
-          V[x] /= 2;
+          V[x] >>= 1;
         } break;
         case 0x7: { // subn Vx,Vy
-          V[0xf] = V[y] > V[x];
+          V[0xf] = !(V[x] > V[y]);
           V[x] = V[y] - V[x];
         } break;
         case 0xe: { // shl Vx
@@ -206,7 +209,8 @@ Chip8::step()
         assert(i + sy < static_cast<int>(memory.size()));
         const auto pixel = memory[i + sy];
         for (auto bit = 0; bit < 8; ++bit) {
-          const auto index = (V[x] + bit + (V[y] + sy) * 64) % framebuffer.size();
+          const auto index =
+            (V[x] + bit + (V[y] + sy) * 64) % framebuffer.size();
           // check if any bit in the new pixel has changed from 1 to 0
           if ((pixel & (0x80 >> bit)) != 0) {
             if (framebuffer[index] == Color::WHITE) {
@@ -229,6 +233,7 @@ Chip8::step()
           pc += (key[V[get_x(opcode)]] == 1) ? 4 : 2;
         } break;
         case 0xa1: { // sknp Vx
+          assert(V[get_x(opcode)] <= 0x0f);
           pc += (key[V[get_x(opcode)]] == 0) ? 4 : 2;
         } break;
         default:
@@ -317,7 +322,9 @@ Chip8::step()
           pc += 2;
         } break;
         case 0x1e: { // add i,Vx
-          i += V[x];
+          const auto sum = i + V[x];
+          V[0xf] = sum > 0xff;
+          i = sum;
           pc += 2;
         } break;
         case 0x29: { // ld f,Vx
@@ -326,22 +333,24 @@ Chip8::step()
           pc += 2;
         } break;
         case 0x33: { // ld b,Vx
-          assert(i + 2 < 0x1000);
+          assert(i + 2 < memory.size());
           memory[i + 2] = V[x] % 10;
           memory[i + 1] = (V[x] / 10) % 10;
           memory[i] = V[x] / 100;
           pc += 2;
         } break;
         case 0x55: { // ld [i],Vx
-          assert(i + x < 0x1000);
+          assert(i + x < memory.size());
           for (auto reg = 0; reg <= x; ++reg)
             memory[i + reg] = V[reg];
+          i += x + 1;
           pc += 2;
         } break;
         case 0x65: { // ld Vx,[i]
-          assert(i + x < 0x1000);
+          assert(i + x < memory.size());
           for (auto byte = 0; byte <= x; ++byte)
             V[byte] = memory[i + byte];
+          i += x + 1;
           pc += 2;
         } break;
         default:
