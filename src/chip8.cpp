@@ -7,38 +7,16 @@
 #include <fstream>
 #include <iostream>
 
-TimedRegister::TimedRegister()
-  : value(0)
-{}
-
-void
-TimedRegister::set(const unsigned char new_value)
-{
-  value = new_value;
-  last_write = std::chrono::high_resolution_clock::now();
-}
-
-void
-TimedRegister::decrement()
-{
-  if (value == 0)
-    return;
-
-  const auto now = std::chrono::high_resolution_clock::now();
-  if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_write)
-        .count() >= 1000 / 60) {
-    --value;
-    last_write = now;
-  }
-}
-
 Chip8::Chip8()
   : opcode(0)
   , i(0)
   , pc(0x200)
+  , delay_timer(0)
+  , sound_timer(0)
   , sp(0)
   , draw_flag(true)
   , halted(false)
+  , cycles(0)
 {
   for (auto i = 0; i < 80; ++i)
     memory[i] = fontset[i];
@@ -90,6 +68,7 @@ Chip8::step()
 {
   opcode = (memory[pc] << 8) | memory[pc + 1];
   draw_flag = false;
+  ++cycles;
 
   switch (opcode & 0xf000) {
     case 0x0000: {
@@ -245,7 +224,7 @@ Chip8::step()
       const auto x = get_x(opcode);
       switch (opcode & 0x00ff) {
         case 0x07: { // ld Vx,dt
-          V[x] = delay_timer.value;
+          V[x] = delay_timer;
           pc += 2;
         } break;
         case 0x0a: { // ld Vx,k
@@ -307,6 +286,7 @@ Chip8::step()
                   break;
                 default:
                   // Try again
+		  --cycles;
                   return;
               }
               pc += 2;
@@ -314,11 +294,11 @@ Chip8::step()
           }
         } break;
         case 0x15: { // ld dt,Vx
-          delay_timer.set(V[x]);
+          delay_timer = V[x];
           pc += 2;
         } break;
         case 0x18: { // ld st,Vx
-          sound_timer.set(V[x]);
+          sound_timer = V[x];
           pc += 2;
         } break;
         case 0x1e: { // add i,Vx
@@ -362,7 +342,17 @@ Chip8::step()
       unknown_instruction(opcode);
       return;
   }
+}
 
-  delay_timer.decrement();
-  sound_timer.decrement();
+void
+Chip8::update_timers()
+{
+  if (cycles < cycles_per_frame)
+    return;
+
+  cycles -= cycles_per_frame;
+  if (delay_timer > 0)
+    --delay_timer;
+  if (sound_timer > 0)
+    --sound_timer;
 }

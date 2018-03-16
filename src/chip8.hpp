@@ -2,22 +2,11 @@
 #define CHIP8_HPP_INCLUDED
 
 #include <array>
-#include <chrono>
 
 enum class Color : unsigned int
 {
   BLACK = 0xff000000,
   WHITE = 0xffffffff,
-};
-
-struct TimedRegister
-{
-  unsigned char value;
-  std::chrono::time_point<std::chrono::high_resolution_clock> last_write;
-
-  TimedRegister();
-  void set(const unsigned char new_value);
-  void decrement();
 };
 
 struct Chip8
@@ -28,14 +17,18 @@ struct Chip8
   unsigned short i;
   unsigned short pc;
   std::array<Color, 64 * 32> framebuffer;
-  TimedRegister delay_timer;
-  TimedRegister sound_timer;
+  unsigned char delay_timer;
+  unsigned char sound_timer;
   std::array<unsigned char, 16> key;
   std::array<unsigned short, 16> stack;
   unsigned short sp;
 
   bool draw_flag;
   bool halted;
+  int cycles;
+
+  // 540 Hz emulated clock rate, 60 fps
+  static const int cycles_per_frame = 540 / 60;
 
   static constexpr std::array<unsigned char, 80> fontset = {
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -60,6 +53,7 @@ struct Chip8
   bool load_rom(const char* path);
   void step();
   void clear_display();
+  void update_timers();
 };
 
 #endif // CHIP8_HPP_INCLUDED

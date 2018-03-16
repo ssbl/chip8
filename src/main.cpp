@@ -127,6 +127,8 @@ main(const int argc, const char* argv[])
       SDL_RenderPresent(renderer);
     }
 
+    chip8.update_timers();
+
     SDL_Delay(2);
   }
 
