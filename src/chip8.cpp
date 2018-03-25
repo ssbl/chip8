@@ -21,6 +21,7 @@ Chip8::Chip8()
   for (auto i = 0; i < 80; ++i)
     memory[i] = fontset[i];
   clear_display();
+  key.fill(0);
 }
 
 bool
