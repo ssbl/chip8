@@ -1,8 +1,8 @@
-#include "SDL2/SDL.h"
 #include "chip8.hpp"
 
 #include <cstdio>
 #include <iostream>
+#include <SDL.h>
 
 int
 main(const int argc, const char* argv[])
