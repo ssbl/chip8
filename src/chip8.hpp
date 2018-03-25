@@ -2,8 +2,9 @@
 #define CHIP8_HPP_INCLUDED
 
 #include <array>
+#include <cstdint>
 
-enum class Color : unsigned int
+enum class Color : std::uint32_t
 {
   BLACK = 0xff000000,
   WHITE = 0xffffffff,
@@ -11,17 +12,17 @@ enum class Color : unsigned int
 
 struct Chip8
 {
-  unsigned short opcode;
-  std::array<unsigned char, 4096> memory;
-  std::array<unsigned char, 16> V;
-  unsigned short i;
-  unsigned short pc;
+  std::uint16_t opcode;
+  std::array<std::uint8_t, 4096> memory;
+  std::array<std::uint8_t, 16> V;
+  std::uint16_t i;
+  std::uint16_t pc;
   std::array<Color, 64 * 32> framebuffer;
-  unsigned char delay_timer;
-  unsigned char sound_timer;
-  std::array<unsigned char, 16> key;
-  std::array<unsigned short, 16> stack;
-  unsigned short sp;
+  std::uint8_t delay_timer;
+  std::uint8_t sound_timer;
+  std::array<std::uint8_t, 16> key;
+  std::array<std::uint16_t, 16> stack;
+  std::uint16_t sp;
 
   bool draw_flag;
   bool halted;
@@ -30,7 +31,7 @@ struct Chip8
   // 540 Hz emulated clock rate, 60 fps
   static const int cycles_per_frame = 540 / 60;
 
-  static constexpr std::array<unsigned char, 80> fontset = {
+  static constexpr std::array<std::uint8_t, 80> fontset = {
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
     0x20, 0x60, 0x20, 0x20, 0x70, // 1
     0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2

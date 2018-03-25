@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <SDL.h>
@@ -46,19 +47,19 @@ Chip8::clear_display()
 }
 
 static void
-unknown_instruction(const unsigned short opcode)
+unknown_instruction(const std::uint16_t opcode)
 {
   std::cerr << "unknown instruction: " << opcode << '\n';
 }
 
-static unsigned char
-get_x(const unsigned short opcode)
+static std::uint8_t
+get_x(const std::uint16_t opcode)
 {
   return (opcode & 0x0f00) >> 8;
 }
 
-static unsigned char
-get_y(const unsigned short opcode)
+static std::uint8_t
+get_y(const std::uint16_t opcode)
 {
   return (opcode & 0x00f0) >> 4;
 }
@@ -313,7 +314,7 @@ Chip8::step()
           pc += 2;
         } break;
         case 0x33: { // ld b,Vx
-          assert(i + 2 < memory.size());
+          assert(i + 2 < static_cast<std::uint16_t>(memory.size()));
           memory[i + 2] = V[x] % 10;
           memory[i + 1] = (V[x] / 10) % 10;
           memory[i] = V[x] / 100;
