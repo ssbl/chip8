@@ -1,11 +1,12 @@
 #include "chip8.hpp"
 
+#include <SDL.h>
+
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
-#include <SDL.h>
 
 Chip8::Chip8()
   : opcode(0)

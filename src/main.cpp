@@ -1,8 +1,9 @@
 #include "chip8.hpp"
 
+#include <SDL.h>
+
 #include <cstdio>
 #include <iostream>
-#include <SDL.h>
 
 int
 main(const int argc, const char* argv[])
