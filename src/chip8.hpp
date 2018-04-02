@@ -1,6 +1,8 @@
 #ifndef CHIP8_HPP_INCLUDED
 #define CHIP8_HPP_INCLUDED
 
+#include <SDL.h>
+
 #include <array>
 #include <cstdint>
 
@@ -55,6 +57,7 @@ struct Chip8
   void step();
   void clear_display();
   void update_timers();
+  int translate_keycode(const SDL_Keycode keycode);
 };
 
 #endif // CHIP8_HPP_INCLUDED

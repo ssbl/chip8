@@ -237,60 +237,14 @@ Chip8::step()
               return;
             }
             if (event.type == SDL_KEYDOWN) {
-              switch (event.key.keysym.sym) {
-                case SDLK_1: // 1
-                  V[x] = 0x1;
-                  break;
-                case SDLK_2: // 2
-                  V[x] = 0x2;
-                  break;
-                case SDLK_3: // 3
-                  V[x] = 0x3;
-                  break;
-                case SDLK_4: // C
-                  V[x] = 0xc;
-                  break;
-                case SDLK_q: // 4
-                  V[x] = 0x4;
-                  break;
-                case SDLK_w: // 5
-                  V[x] = 0x5;
-                  break;
-                case SDLK_e: // 6
-                  V[x] = 0x6;
-                  break;
-                case SDLK_r: // D
-                  V[x] = 0xd;
-                  break;
-                case SDLK_a: // 7
-                  V[x] = 0x7;
-                  break;
-                case SDLK_s: // 8
-                  V[x] = 0x8;
-                  break;
-                case SDLK_d: // 9
-                  V[x] = 0x9;
-                  break;
-                case SDLK_f: // E
-                  V[x] = 0xe;
-                  break;
-                case SDLK_z: // A
-                  V[x] = 0xa;
-                  break;
-                case SDLK_x: // 0
-                  V[x] = 0x0;
-                  break;
-                case SDLK_c: // B
-                  V[x] = 0xb;
-                  break;
-                case SDLK_v: // F
-                  V[x] = 0xf;
-                  break;
-                default:
-                  // Try again
-		  --cycles;
-                  return;
+              const auto k = translate_keycode(event.key.keysym.sym);
+              if (k == -1) {
+                // Try again
+                --cycles;
+                return;
               }
+
+              V[x] = k;
               pc += 2;
             }
           }
@@ -357,4 +311,45 @@ Chip8::update_timers()
     --delay_timer;
   if (sound_timer > 0)
     --sound_timer;
+}
+
+int
+Chip8::translate_keycode(const SDL_Keycode keycode)
+{
+  switch (keycode) {
+    case SDLK_1:
+      return 0x1;
+    case SDLK_2:
+      return 0x2;
+    case SDLK_3:
+      return 0x3;
+    case SDLK_4:
+      return 0xc;
+    case SDLK_q:
+      return 0x4;
+    case SDLK_w:
+      return 0x5;
+    case SDLK_e:
+      return 0x6;
+    case SDLK_r:
+      return 0xd;
+    case SDLK_a:
+      return 0x7;
+    case SDLK_s:
+      return 0x8;
+    case SDLK_d:
+      return 0x9;
+    case SDLK_f:
+      return 0xe;
+    case SDLK_z:
+      return 0xa;
+    case SDLK_x:
+      return 0x0;
+    case SDLK_c:
+      return 0xb;
+    case SDLK_v:
+      return 0xf;
+    default:
+      return -1;
+  }
 }
