@@ -74,8 +74,8 @@ main(const int argc, const char* argv[])
 
     if (chip8.draw_flag) {
       SDL_RenderClear(renderer);
-      auto copy = chip8.framebuffer;
-      SDL_UpdateTexture(texture, nullptr, copy.data(), 64 * sizeof(unsigned));
+      SDL_UpdateTexture(
+        texture, nullptr, chip8.framebuffer.data(), 64 * sizeof(unsigned));
       SDL_RenderCopy(renderer, texture, nullptr, nullptr);
       SDL_RenderPresent(renderer);
     }
