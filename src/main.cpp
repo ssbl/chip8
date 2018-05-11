@@ -2,21 +2,20 @@
 
 #include <SDL.h>
 
-#include <cstdio>
 #include <iostream>
 
 int
 main(const int argc, const char* argv[])
 {
   if (argc != 2) {
-    std::printf("usage: chip8 <path-to-rom-file>\n");
+    std::cerr << "usage: chip8 <path-to-rom-file>\n";
     return 1;
   }
 
   Chip8 chip8;
 
   if (!chip8.load_rom(argv[1])) {
-    std::printf("error loading file: %s\n", argv[1]);
+    std::cerr << "error loading file: " << argv[1] << '\n';
     return 1;
   }
 
