@@ -9,7 +9,7 @@ int
 main(const int argc, const char* argv[])
 {
   if (argc != 2) {
-    std::printf("usage\n");
+    std::printf("usage: chip8 <path-to-rom-file>\n");
     return 1;
   }
 
